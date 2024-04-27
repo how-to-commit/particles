@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "emscripten/emscripten.h"
 #include <raylib.h>
 
@@ -9,6 +7,10 @@
 const int screenWidth = 800;
 const int screenHeight = 400;
 
+const Point2f initialPos = {100, screenHeight / 2};
+const Point2f initialVel = {0, 0};
+const Point2f initialAcc = {10, 0};
+
 Point2f pos, vel, acc;
 Particle particle;
 double currTime, prevTime, deltaTime;
@@ -16,20 +18,26 @@ double currTime, prevTime, deltaTime;
 const int targetFps = 60;
 
 void init() {
-    printf("[particles] Init called...\n");
-
     // create positioning data
-    p2f_init(&pos, 100, screenHeight / 2);
-    p2f_init(&vel, 0, 0);
-    p2f_init(&acc, 10, 0);
+    pos = initialPos;
+    vel = initialVel;
+    acc = initialAcc;
 
     // create particle
-    particle_init(&particle, -1, &pos, &vel, &acc, false);
+    particle_init(&particle, 300, &pos, &vel, &acc, false);
 
     // set time
     prevTime = 0.0;
     currTime = 0.0;
     deltaTime = 0.0;
+}
+
+void reset() {
+    particle.position = initialPos;
+    particle.velocity = initialVel;
+    particle.acceleration = initialAcc;
+    particle.isDead = false;
+    particle.ttl = 300;
 }
 
 void calculate_delta_time() {
@@ -55,10 +63,9 @@ void update() {
     DrawText("Test", 100, 100, 20, LIGHTGRAY);
 
     if (IsKeyPressed(KEY_SPACE))
-        init();
+        reset();
 
     DrawCircle(particle.position.x, particle.position.y, 20, RED);
-    printf("[particles] Drawn at %f %f, dT %f\n", particle.position.x, particle.position.y, deltaTime);
     particle_simulate(&particle, deltaTime);
 
     EndDrawing();
@@ -69,7 +76,6 @@ int main() {
     init();
 
     InitWindow(screenWidth, screenHeight, "test");
-    SetTargetFPS(targetFps);
 
-    emscripten_set_main_loop(update, 0, 1);
+    emscripten_set_main_loop(update, targetFps, 0);
 }
