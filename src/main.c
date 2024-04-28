@@ -8,8 +8,8 @@ const int screenWidth = 800;
 const int screenHeight = 400;
 
 const Point2f initialPos = {100, screenHeight / 2};
-const Point2f initialVel = {0, 0};
-const Point2f initialAcc = {10, 0};
+const Point2f initialVel = {100, 100};
+const Point2f initialAcc = {0, 0};
 
 Point2f pos, vel, acc;
 Particle particle;
@@ -24,7 +24,7 @@ void init() {
     acc = initialAcc;
 
     // create particle
-    particle_init(&particle, 300, &pos, &vel, &acc, false);
+    particle_init(&particle, -1, 20, &pos, &vel, &acc);
 
     // set time
     prevTime = 0.0;
@@ -32,13 +32,12 @@ void init() {
     deltaTime = 0.0;
 }
 
-void reset() {
-    particle.position = initialPos;
-    particle.velocity = initialVel;
-    particle.acceleration = initialAcc;
-    particle.isDead = false;
-    particle.ttl = 300;
-}
+// void reset() {
+//     particle.position = initialPos;
+//     particle.velocity = initialVel;
+//     particle.acceleration = initialAcc;
+//     particle.ttl = 300;
+// }
 
 void calculate_delta_time() {
     currTime = GetTime();
@@ -62,10 +61,10 @@ void update() {
     ClearBackground(RAYWHITE);
     DrawText("Test", 100, 100, 20, LIGHTGRAY);
 
-    if (IsKeyPressed(KEY_SPACE))
-        reset();
+    // if (IsKeyPressed(KEY_SPACE))
+    //     reset();
 
-    DrawCircle(particle.position.x, particle.position.y, 20, RED);
+    DrawCircle((int)particle.position.x, (int)particle.position.y, particle.mass, RED);
     particle_simulate(&particle, deltaTime);
 
     EndDrawing();
