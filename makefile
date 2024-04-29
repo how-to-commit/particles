@@ -13,21 +13,24 @@ INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CC := emcc
-CFLAGS := $(INC_FLAGS) -MMD -MP -Wall
+CFLAGS := $(INC_FLAGS) -MMD -MP -Wall -Wextra -Werror
 TARGET_EXEC := particles.html
-LDFLAGS := -Os -sUSE_GLFW=3 -DPLATFORM_WEB
+LDFLAGS := $(LIB_FLAGS) -Os -sUSE_GLFW=3 -DPLATFORM_WEB
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(LIBS)
-	$(CC) $(CFLAGS) $(LIB_FLAGS) $(OBJS) -o $@ $(LDFLAGS)
+	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)
 
 $(BUILD_DIR)/%.c.o: %.c
 	mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-run: $(BUILD_DIR)/$(TARGET_EXEC)
+
+.PHONY: clean run
+
+run: 
+	emmake $(MAKE) 
 	emrun ./build/$(TARGET_EXEC)
 
-.PHONY: clean
 clean:
 	rm -r $(BUILD_DIR)
 

@@ -5,26 +5,23 @@
 #include <point2f.h>
 
 const int screenWidth = 800;
-const int screenHeight = 400;
+const int screenHeight = 600;
 
 const Point2f initialPos = {100, screenHeight / 2};
 const Point2f initialVel = {100, 100};
 const Point2f initialAcc = {0, 0};
 
-Point2f pos, vel, acc;
-Particle particle;
+PSystem psys;
 double currTime, prevTime, deltaTime;
 
 const int targetFps = 60;
 
 void init() {
-    // create positioning data
-    pos = initialPos;
-    vel = initialVel;
-    acc = initialAcc;
-
-    // create particle
-    particle_init(&particle, -1, 20, &pos, &vel, &acc);
+    // create particle system
+    psys = psys_init();
+    psys_add(
+        &psys,
+        (Particle){.ttl = -1, .mass = 20, .position = initialPos, .velocity = initialVel, .acceleration = initialAcc});
 
     // set time
     prevTime = 0.0;
@@ -32,18 +29,11 @@ void init() {
     deltaTime = 0.0;
 }
 
-// void reset() {
-//     particle.position = initialPos;
-//     particle.velocity = initialVel;
-//     particle.acceleration = initialAcc;
-//     particle.ttl = 300;
-// }
-
 void calculate_delta_time() {
-    currTime = GetTime();
+    currTime = (double)GetTime();
 
-    float drawTime = currTime - prevTime;
-    float waitTime = (1.0 / (float)targetFps) - drawTime;
+    double drawTime = currTime - prevTime;
+    double waitTime = (1.0 / (double)targetFps) - drawTime;
 
     if (waitTime > 0.0) {
         WaitTime(waitTime);
@@ -64,8 +54,15 @@ void update() {
     // if (IsKeyPressed(KEY_SPACE))
     //     reset();
 
-    DrawCircle((int)particle.position.x, (int)particle.position.y, particle.mass, RED);
-    particle_simulate(&particle, deltaTime);
+    size_t sysSize = sizeof(psys.particles) / sizeof(Particle);
+
+    for (size_t i = 0; i < sysSize; i++) {
+        if (psys.particles[i].ttl != 0) {
+            particle_simulate(&psys.particles[i], deltaTime);
+            DrawCircle((int)psys.particles[i].position.x, (int)psys.particles[i].position.y, psys.particles[i].mass,
+                       RED);
+        }
+    }
 
     EndDrawing();
     calculate_delta_time();
