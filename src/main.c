@@ -7,10 +7,6 @@
 const int screenWidth = 800;
 const int screenHeight = 600;
 
-const Point2f initialPos = {100, screenHeight / 2};
-const Point2f initialVel = {100, 100};
-const Point2f initialAcc = {0, 0};
-
 PSystem psys;
 double currTime, prevTime, deltaTime;
 
@@ -18,10 +14,8 @@ const int targetFps = 60;
 
 void init() {
     // create particle system
-    psys = psys_init();
-    psys_add(
-        &psys,
-        (Particle){.ttl = -1, .mass = 20, .position = initialPos, .velocity = initialVel, .acceleration = initialAcc});
+    // (0, 1000)px/s^2 accel gravity
+    psys = psys_init((Point2f){0, 1000});
 
     // set time
     prevTime = 0.0;
@@ -48,19 +42,27 @@ void calculate_delta_time() {
 void update() {
     BeginDrawing();
 
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
+        Vector2 _mPosVec2 = GetMousePosition();
+        Point2f mousePos = {_mPosVec2.x, _mPosVec2.y};
+
+        psys_add(
+            &psys,
+            (Particle){
+                .ttl = -1, .mass = 20, .position_current = mousePos, .position_old = mousePos, .acceleration = {0}});
+    }
+    psys_simulate(&psys, deltaTime);
+
+    // draw step
     ClearBackground(RAYWHITE);
     DrawText("Test", 100, 100, 20, LIGHTGRAY);
 
-    // if (IsKeyPressed(KEY_SPACE))
-    //     reset();
-
+    // draw particles - only draw alive ones
     size_t sysSize = sizeof(psys.particles) / sizeof(Particle);
-
     for (size_t i = 0; i < sysSize; i++) {
         if (psys.particles[i].ttl != 0) {
-            particle_simulate(&psys.particles[i], deltaTime);
-            DrawCircle((int)psys.particles[i].position.x, (int)psys.particles[i].position.y, psys.particles[i].mass,
-                       RED);
+            DrawCircle((int)psys.particles[i].position_current.x, (int)psys.particles[i].position_current.y,
+                       psys.particles[i].mass, RED);
         }
     }
 

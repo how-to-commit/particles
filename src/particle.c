@@ -1,50 +1,98 @@
+#include <stdio.h>
 #include <stdlib.h>
 
+#include <math.h>
 #include <raylib.h>
 
 #include <particle.h>
 #include <point2f.h>
 
-// void particle_init(Particle *ptr, int ttl, int mass, Point2f *pos, Point2f *vel, Point2f *acc) {
-//     ptr->ttl = ttl;
-//     ptr->mass = mass;
-//     ptr->position = *pos;
-//     ptr->velocity = *vel;
-//     ptr->acceleration = *acc;
-// }
+const double COLLISION_RESPONSE_COEFF = 0.75;
 
-void particle_simulate(Particle *p, double time_elapsed) {
-    // do not continue to simulate "dead" particles
-    if (p->ttl == 0)
-        return;
+// --------------------------------------------------------------------------------------------------------------------
+// particles
+// --------------------------------------------------------------------------------------------------------------------
 
-    // check and kill dead particles - but we still want them to finish this iteration
-    if (p->ttl > 0)
-        p->ttl--;
+void particle_update_position(Particle *p, double dT) {
+    // use Verlet integration to calculate movement
+    const Point2f velocity = p2f_sub(p->position_current, p->position_old);
+    p->position_old = p->position_current;
 
-    // check if particle is on the boundary, if so, bounce them backward the other direction
-    if (p->position.x >= (GetScreenWidth() - p->mass) || p->position.x <= p->mass)
-        p->velocity.x *= -1.0f;
-    if (p->position.y >= (GetScreenHeight() - p->mass) || p->position.y <= p->mass)
-        p->velocity.y *= -1.0f;
+    // probably refactor the math
+    // position_current = position_current + velocity + acceleration * dT^2
+    p->position_current = p2f_add(p2f_add(p->position_current, velocity), p2f_fmul(p->acceleration, dT * dT));
 
-    Point2f frac_vel = p2f_mul(&p->velocity, time_elapsed);
-    Point2f frac_acc = p2f_mul(&p->acceleration, time_elapsed);
-
-    p2f_add_inplace(&p->position, &frac_vel);
-    p2f_add_inplace(&p->velocity, &frac_acc);
+    // reset accel
+    p->acceleration = (Point2f){0, 0};
 }
 
-PSystem psys_init() {
-    PSystem sys = {.particles = {0}, .next_free_slot = 0};
-    return sys;
+void particle_constraint(Particle *p) {
+    const int max_height = GetScreenHeight();
+    const int max_width = GetScreenWidth();
+
+    if (p->position_current.x + p->mass > max_width) {
+        p->position_current.x = max_width - p->mass;
+    } else if (p->position_current.x - p->mass < 0) {
+        p->position_current.x = p->mass;
+    }
+
+    if (p->position_current.y + p->mass > max_height) {
+        p->position_current.y = max_height - p->mass;
+    } else if (p->position_current.y + p->mass < 0) {
+        p->position_current.y = p->mass;
+    }
 }
+
+void particle_accelerate(Particle *p, Point2f accel) {
+    p->acceleration = p2f_add(p->acceleration, accel);
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// system solver
+// --------------------------------------------------------------------------------------------------------------------
 
 void psys_simulate(PSystem *system, double time_elapsed) {
     size_t sysSize = sizeof(system->particles) / sizeof(Particle);
+
     for (size_t i = 0; i < sysSize; i++) {
-        particle_simulate(&system->particles[i], time_elapsed);
+        if (system->particles[i].ttl == 0)
+            continue;
+
+        particle_accelerate(&system->particles[i], system->sys_accel);
+        particle_constraint(&system->particles[i]);
+
+        for (size_t j = 0; j < sysSize; j++) {
+            if (i != j && system->particles[j].ttl != 0)
+                handle_collision(&system->particles[i], &system->particles[j]);
+        }
+
+        particle_update_position(&system->particles[i], time_elapsed);
     }
+}
+
+void handle_collision(Particle *p1, Particle *p2) {
+
+    Point2f collision_vector = p2f_sub(p1->position_current, p2->position_current);
+    double dist = p2f_dist(collision_vector);
+
+    double mindist = (double)(p1->mass + p2->mass);
+
+    if (dist < mindist) {
+        Point2f n = p2f_fdiv(collision_vector, dist);
+        double dP = (mindist - dist) * 0.5;
+
+        p1->position_current = p2f_add(p1->position_current, p2f_fmul(n, dP));
+        p2->position_current = p2f_sub(p2->position_current, p2f_fmul(n, dP));
+    }
+}
+
+// --------------------------------------------------------------------------------------------------------------------
+// particle system constructors
+// --------------------------------------------------------------------------------------------------------------------
+
+PSystem psys_init(Point2f sys_accel) {
+    PSystem sys = {.particles = {0}, .next_free_slot = 0, .sys_accel = sys_accel};
+    return sys;
 }
 
 int psys_add(PSystem *system, Particle particle) {

@@ -1,23 +1,28 @@
+#include <math.h>
+#include <raylib.h>
+
 #include <point2f.h>
 
-void p2f_init(Point2f *ptr, double x, double y) {
-    ptr->x = x;
-    ptr->y = y;
+Point2f p2f_add(Point2f a, Point2f b) {
+    return (Point2f){.x = a.x + b.x, .y = a.y + b.y};
 }
 
-Point2f p2f_mul(Point2f *a, double mul) {
-    Point2f res;
-    res.x = a->x * mul;
-    res.y = a->y * mul;
-    return res;
+Point2f p2f_fadd(Point2f a, double add) {
+    return (Point2f){.x = a.x + add, .y = a.y + add};
 }
 
-void p2f_add_inplace(Point2f *original, Point2f *add) {
-    original->x += add->x;
-    original->y += add->y;
+Point2f p2f_sub(Point2f a, Point2f b) {
+    return (Point2f){.x = a.x - b.x, .y = a.y - b.y};
 }
 
-void p2f_mul_inplace(Point2f *original, double mul) {
-    original->x *= mul;
-    original->y *= mul;
+Point2f p2f_fmul(Point2f a, double mul) {
+    return (Point2f){.x = a.x * mul, .y = a.y * mul};
+}
+
+Point2f p2f_fdiv(Point2f a, double div) {
+    return (Point2f){.x = a.x / div, .y = a.y / div};
+}
+
+double p2f_dist(Point2f a) {
+    return sqrt(a.x * a.x + a.y * a.y);
 }
