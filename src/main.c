@@ -23,8 +23,8 @@ void init() {
     InitWindow(screenWidth, screenHeight, "Particles");
 
     // create particle system
-    // (0, 1000)px/s^2 accel gravity
-    psys = psys_init((Point2f){0, 1000});
+    // (0, 300)px/s^2 accel gravity
+    psys = psys_init((Point2f){0, 300});
 
     // set time
     prevTime = 0.0;

@@ -7,7 +7,7 @@ DEPS := $(OBJS:.o=.d)
 
 LIB_DIRS := ./lib
 LIBS := $(shell find $(LIB_DIRS) -name '*.a')
-LIB_FLAGS := -L$(LIB_DIRS) $(LIBS:./lib/lib%.a=-l%)
+LIB_FLAGS := -L$(LIB_DIRS) $(LIBS)
 
 INC_DIRS := $(shell find $(SRC_DIRS) -type d) 
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
