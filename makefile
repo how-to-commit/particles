@@ -15,7 +15,7 @@ INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 CC := emcc
 CFLAGS := $(INC_FLAGS) -MMD -MP -Wall -Wextra -Werror
 TARGET_EXEC := particles.html
-LDFLAGS := $(LIB_FLAGS) -Os -sUSE_GLFW=3 -DPLATFORM_WEB
+LDFLAGS := $(LIB_FLAGS) -Os -sUSE_GLFW=3 -DPLATFORM_WEB --shell-file ./src/shell.html
 
 $(BUILD_DIR)/$(TARGET_EXEC): $(OBJS) $(LIBS)
 	$(CC) $(CFLAGS) $(OBJS) -o $@ $(LDFLAGS)

@@ -7,8 +7,6 @@
 #include <particle.h>
 #include <point2f.h>
 
-const double COLLISION_RESPONSE_COEFF = 0.75;
-
 // --------------------------------------------------------------------------------------------------------------------
 // particles
 // --------------------------------------------------------------------------------------------------------------------
@@ -27,19 +25,20 @@ void particle_update_position(Particle *p, double dT) {
 }
 
 void particle_constraint(Particle *p) {
+    const double EDGE_BOUNCE = 20.0;
     const int max_height = GetScreenHeight();
     const int max_width = GetScreenWidth();
 
     if (p->position_current.x + p->mass > max_width) {
-        p->position_current.x = max_width - p->mass;
+        p->position_current.x = max_width - p->mass - EDGE_BOUNCE;
     } else if (p->position_current.x - p->mass < 0) {
-        p->position_current.x = p->mass;
+        p->position_current.x = p->mass + EDGE_BOUNCE;
     }
 
     if (p->position_current.y + p->mass > max_height) {
-        p->position_current.y = max_height - p->mass;
-    } else if (p->position_current.y + p->mass < 0) {
-        p->position_current.y = p->mass;
+        p->position_current.y = max_height - p->mass - EDGE_BOUNCE;
+    } else if (p->position_current.y - p->mass < 0) {
+        p->position_current.y = p->mass + EDGE_BOUNCE;
     }
 }
 

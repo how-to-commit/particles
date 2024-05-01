@@ -18,7 +18,7 @@ typedef struct Particle {
 } Particle;
 
 typedef struct PSystem {
-    Particle particles[64];
+    Particle particles[256];
     int next_free_slot;
 
     Point2f sys_accel;
