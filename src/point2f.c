@@ -26,3 +26,8 @@ Point2f p2f_fdiv(Point2f a, double div) {
 double p2f_dist(Point2f a) {
     return sqrt(a.x * a.x + a.y * a.y);
 }
+
+Point2f p2f_get_unit_vector(Point2f a) {
+    double magnitude = p2f_dist(a);
+    return p2f_fdiv(a, magnitude);
+}

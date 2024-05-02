@@ -13,11 +13,11 @@
 
 void particle_update_position(Particle *p, double dT) {
     // use Verlet integration to calculate movement
-    const Point2f velocity = p2f_sub(p->position_current, p->position_old);
-    p->position_old = p->position_current;
 
     // probably refactor the math
-    // position_current = position_current + velocity + acceleration * dT^2
+    // position_current = 2 * position_current - position_old + acceleration * dT^2
+    const Point2f velocity = p2f_sub(p->position_current, p->position_old);
+    p->position_old = p->position_current;
     p->position_current = p2f_add(p2f_add(p->position_current, velocity), p2f_fmul(p->acceleration, dT * dT));
 
     // reset accel
@@ -25,9 +25,12 @@ void particle_update_position(Particle *p, double dT) {
 }
 
 void particle_constraint(Particle *p) {
-    const double EDGE_BOUNCE = 20.0;
     const int max_height = GetScreenHeight();
     const int max_width = GetScreenWidth();
+
+    // add more energy into the system when bouncing to keep it active
+    // yes, it aint accurate, but it makes it fun
+    const double EDGE_BOUNCE = 20.0;
 
     if (p->position_current.x + p->mass > max_width) {
         p->position_current.x = max_width - p->mass - EDGE_BOUNCE;
@@ -73,15 +76,16 @@ void handle_collision(Particle *p1, Particle *p2) {
 
     Point2f collision_vector = p2f_sub(p1->position_current, p2->position_current);
     double dist = p2f_dist(collision_vector);
-
     double mindist = (double)(p1->mass + p2->mass);
 
     if (dist < mindist) {
-        Point2f n = p2f_fdiv(collision_vector, dist);
-        double dP = (mindist - dist) * 0.5;
+        Point2f collision_direction = p2f_get_unit_vector(collision_vector);
+        double delta_pos = (mindist - dist) / 2;
+        double p1_mass_ratio = (double)p1->mass / (double)(p1->mass + p2->mass);
+        double p2_mass_ratio = (double)p2->mass / (double)(p1->mass + p2->mass);
 
-        p1->position_current = p2f_add(p1->position_current, p2f_fmul(n, dP));
-        p2->position_current = p2f_sub(p2->position_current, p2f_fmul(n, dP));
+        p1->position_current = p2f_add(p1->position_current, p2f_fmul(collision_direction, delta_pos * p1_mass_ratio));
+        p2->position_current = p2f_sub(p2->position_current, p2f_fmul(collision_direction, delta_pos * p2_mass_ratio));
     }
 }
 
