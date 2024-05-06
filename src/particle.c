@@ -30,7 +30,7 @@ void particle_constraint(Particle *p) {
 
     // add more energy into the system when bouncing to keep it active
     // yes, it aint accurate, but it makes it fun
-    const double EDGE_BOUNCE = 20.0;
+    const double EDGE_BOUNCE = 0.0;
 
     if (p->position_current.x + p->mass > max_width) {
         p->position_current.x = max_width - p->mass - EDGE_BOUNCE;

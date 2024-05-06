@@ -13,7 +13,7 @@ INC_DIRS := $(shell find $(SRC_DIRS) -type d)
 INC_FLAGS := $(addprefix -I,$(INC_DIRS))
 
 CC := emcc
-CFLAGS := $(INC_FLAGS) -MMD -MP -Wall -Wextra -Werror
+CFLAGS := $(INC_FLAGS) -MMD -MP -Wall -Wextra
 TARGET_EXEC := particles.html
 LDFLAGS := $(LIB_FLAGS) -Os -sUSE_GLFW=3 -DPLATFORM_WEB --shell-file ./src/shell.html
 

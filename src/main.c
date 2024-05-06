@@ -1,5 +1,7 @@
 #include "emscripten/emscripten.h"
 #include <raylib.h>
+#define RAYGUI_IMPLEMENTATION
+#include <raygui.h>
 
 #include <particle.h>
 #include <point2f.h>
@@ -9,6 +11,11 @@ int screenWidth, screenHeight;
 PSystem psys;
 double currTime, prevTime, deltaTime;
 
+float accel_x = 0.0;
+float accel_y = 300.0;
+float timescale = 1.0;
+
+const int VERLET_SUBSTEPS = 1;
 const int TARGET_FPS = 60;
 const int INPUT_VARIANCE = 20;
 const Color BALL_COLORS[] = {YELLOW, ORANGE, PINK, RED, MAROON};
@@ -24,7 +31,7 @@ void init() {
     InitWindow(screenWidth, screenHeight, "Particles");
 
     // create particle system
-    psys = psys_init((Point2f){0, 300});
+    psys = psys_init((Point2f){accel_x, accel_y});
 
     // set time
     prevTime = 0.0;
@@ -56,26 +63,34 @@ Color color_particles(Particle *p) {
 void update() {
     BeginDrawing();
 
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)) {
-        Vector2 _mPosVec2 = GetMousePosition();
-        Point2f mousePos = {_mPosVec2.x, _mPosVec2.y};
+    if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
+        Vector2 mpos_vec2 = GetMousePosition();
 
-        // generate random initial velocity in a random direction
-        Point2f oldPos = {_mPosVec2.x + GetRandomValue(-INPUT_VARIANCE, INPUT_VARIANCE),
-                          _mPosVec2.y + GetRandomValue(-INPUT_VARIANCE, INPUT_VARIANCE)};
+        if (mpos_vec2.x > 280 || mpos_vec2.y < 190 || mpos_vec2.y > 290) {
+            Point2f mousePos = {mpos_vec2.x, mpos_vec2.y};
 
-        // generate random size
-        int mass = GetRandomValue(5, 25);
+            // generate random initial velocity in a random direction
+            Point2f oldPos = {mpos_vec2.x + GetRandomValue(-INPUT_VARIANCE, INPUT_VARIANCE),
+                              mpos_vec2.y + GetRandomValue(-INPUT_VARIANCE, INPUT_VARIANCE)};
 
-        psys_add(
-            &psys,
-            (Particle){
-                .ttl = -1, .mass = mass, .position_current = mousePos, .position_old = oldPos, .acceleration = {0}});
+            // generate random size
+            int mass = GetRandomValue(5, 25);
+
+            psys_add(&psys, (Particle){.ttl = -1,
+                                       .mass = mass,
+                                       .position_current = mousePos,
+                                       .position_old = oldPos,
+                                       .acceleration = {0}});
+        }
     }
 
-    psys_simulate(&psys, deltaTime);
+    psys.sys_accel = (Point2f){accel_x, accel_y};
+
+    for (int i = 0; i < VERLET_SUBSTEPS; i++)
+        psys_simulate(&psys, deltaTime * timescale / VERLET_SUBSTEPS);
 
     // draw step
+    // text at background
     ClearBackground(RAYWHITE);
     DrawText("Left click to spawn particles.", 100, 100, 20, LIGHTGRAY);
 
@@ -87,6 +102,12 @@ void update() {
                        psys.particles[i].mass, color_particles(&psys.particles[i]));
         }
     }
+
+    // slider bar ontop
+    DrawRectangle(0, 190, 280, 100, Fade(LIGHTGRAY, 0.5f));
+    GuiSliderBar((Rectangle){100, 200, 120, 20}, "Acceleration X", "px/s^2", &accel_x, -1000, 1000);
+    GuiSliderBar((Rectangle){100, 230, 120, 20}, "Acceleration Y", "px/s^2", &accel_y, -1000, 1000);
+    GuiSliderBar((Rectangle){100, 260, 120, 20}, "Time Scale", NULL, &timescale, 0.5, 1.5);
 
     EndDrawing();
     calculate_delta_time();
