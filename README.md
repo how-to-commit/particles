@@ -1,14 +1,13 @@
 # Particles
 
-Particles is a very simple particle system built in C, compiled to `wasm` with Raylib.
-
-It's not meant to be very realistic, just a fancy distraction. Balls gain speed when they bump into walls to keep them moving.
+Particles is a very simple particle system built in C, compiled to `wasm` with Raylib. [Link to online demo](https://how-to-commit.github.io/particles.html)
 
 ## Build
 
 Requirements:
 
 -   Raylib
+-   Raygui
 -   Emscripten
 
 Steps:
