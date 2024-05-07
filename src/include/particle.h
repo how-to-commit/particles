@@ -5,11 +5,8 @@
 #include <stdbool.h>
 
 typedef struct Particle {
-    // particle time to live in frames
-    int ttl;
-
-    // mass - used for calculating momentum, and (for now) as the radius of the particle
-    int mass;
+    int ttl;  // in frames
+    int mass; // radius and collision inertia
 
     // positional Vector2 -> all in units of pixels and seconds (e.g., accel = px/s^2)
     Point2f position_current;
@@ -18,7 +15,7 @@ typedef struct Particle {
 } Particle;
 
 typedef struct PSystem {
-    Particle particles[1024];
+    Particle particles[256];
     int next_free_slot;
 
     Point2f sys_accel;
@@ -32,6 +29,7 @@ void particle_accelerate(Particle *p, Point2f accel);
 // particle system solver
 void psys_simulate(PSystem *system, double time_elapsed);
 void handle_collision(Particle *p1, Particle *p2);
+void collide_with_cursor(PSystem *system, Particle *cursor);
 
 // system constructor
 PSystem psys_init(Point2f sys_accel);

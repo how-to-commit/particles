@@ -10,14 +10,15 @@ int screenWidth, screenHeight;
 
 PSystem psys;
 double currTime, prevTime, deltaTime;
+Particle cursor;
 
 float accel_x = 0.0;
 float accel_y = 300.0;
 float timescale = 1.0;
 
-const int VERLET_SUBSTEPS = 1;
+const int VERLET_SUBSTEPS = 5;
 const int TARGET_FPS = 60;
-const int INPUT_VARIANCE = 20;
+const int INPUT_VARIANCE = 10;
 const Color BALL_COLORS[] = {YELLOW, ORANGE, PINK, RED, MAROON};
 
 EM_JS(int, get_css_screen_width, (), { return window.innerWidth; });
@@ -32,6 +33,11 @@ void init() {
 
     // create particle system
     psys = psys_init((Point2f){accel_x, accel_y});
+    cursor = (Particle){.acceleration = (Point2f){0, 0},
+                        .mass = 30,
+                        .position_current = (Point2f){0, 0},
+                        .position_old = (Point2f){0, 0},
+                        .ttl = -1};
 
     // set time
     prevTime = 0.0;
@@ -62,13 +68,16 @@ Color color_particles(Particle *p) {
 
 void update() {
     BeginDrawing();
+    Vector2 mpos_vec2 = GetMousePosition();
+    Point2f mousePos = {mpos_vec2.x, mpos_vec2.y};
+
+    // conf simulation
+    psys.sys_accel = (Point2f){accel_x, accel_y};
+    cursor.position_old = cursor.position_current;
+    cursor.position_current = mousePos;
 
     if (IsMouseButtonDown(MOUSE_BUTTON_LEFT)) {
-        Vector2 mpos_vec2 = GetMousePosition();
-
         if (mpos_vec2.x > 280 || mpos_vec2.y < 190 || mpos_vec2.y > 290) {
-            Point2f mousePos = {mpos_vec2.x, mpos_vec2.y};
-
             // generate random initial velocity in a random direction
             Point2f oldPos = {mpos_vec2.x + GetRandomValue(-INPUT_VARIANCE, INPUT_VARIANCE),
                               mpos_vec2.y + GetRandomValue(-INPUT_VARIANCE, INPUT_VARIANCE)};
@@ -82,10 +91,11 @@ void update() {
                                        .position_old = oldPos,
                                        .acceleration = {0}});
         }
+    } else {
+        collide_with_cursor(&psys, &cursor);
     }
 
-    psys.sys_accel = (Point2f){accel_x, accel_y};
-
+    // simulate
     for (int i = 0; i < VERLET_SUBSTEPS; i++)
         psys_simulate(&psys, deltaTime * timescale / VERLET_SUBSTEPS);
 

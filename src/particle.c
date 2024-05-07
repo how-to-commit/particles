@@ -16,9 +16,9 @@ void particle_update_position(Particle *p, double dT) {
 
     // probably refactor the math
     // position_current = 2 * position_current - position_old + acceleration * dT^2
-    const Point2f velocity = p2f_sub(p->position_current, p->position_old);
+    const Point2f deltaPos = p2f_sub(p->position_current, p->position_old);
     p->position_old = p->position_current;
-    p->position_current = p2f_add(p2f_add(p->position_current, velocity), p2f_fmul(p->acceleration, dT * dT));
+    p->position_current = p2f_add(p2f_add(p->position_current, deltaPos), p2f_fmul(p->acceleration, dT * dT));
 
     // reset accel
     p->acceleration = (Point2f){0, 0};
@@ -86,6 +86,17 @@ void handle_collision(Particle *p1, Particle *p2) {
 
         p1->position_current = p2f_add(p1->position_current, p2f_fmul(collision_direction, delta_pos * p1_mass_ratio));
         p2->position_current = p2f_sub(p2->position_current, p2f_fmul(collision_direction, delta_pos * p2_mass_ratio));
+    }
+}
+
+void collide_with_cursor(PSystem *system, Particle *cursor) {
+    size_t sysSize = sizeof(system->particles) / sizeof(Particle);
+
+    for (size_t i = 0; i < sysSize; i++) {
+        if (system->particles[i].ttl == 0)
+            continue;
+
+        handle_collision(cursor, &system->particles[i]);
     }
 }
 
