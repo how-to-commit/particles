@@ -28,20 +28,24 @@ void particle_constraint(Particle *p) {
     const int max_height = GetScreenHeight();
     const int max_width = GetScreenWidth();
 
-    // add more energy into the system when bouncing to keep it active
-    // yes, it aint accurate, but it makes it fun
-    const double EDGE_BOUNCE = 0.0;
+    const double ELASTICITY = 0.8;
+    double dx = (p->position_current.x - p->position_old.x) * ELASTICITY;
+    double dy = (p->position_current.y - p->position_old.y) * ELASTICITY;
 
-    if (p->position_current.x + p->mass > max_width) {
-        p->position_current.x = max_width - p->mass - EDGE_BOUNCE;
-    } else if (p->position_current.x - p->mass < 0) {
-        p->position_current.x = p->mass + EDGE_BOUNCE;
+    if (p->position_current.x > max_width - p->mass) {
+        p->position_current.x = max_width - p->mass;
+        p->position_old.x = p->position_current.x + dx;
+    } else if (p->position_current.x < p->mass) {
+        p->position_current.x = p->mass;
+        p->position_old.x = p->position_current.x + dx;
     }
 
-    if (p->position_current.y + p->mass > max_height) {
-        p->position_current.y = max_height - p->mass - EDGE_BOUNCE;
-    } else if (p->position_current.y - p->mass < 0) {
-        p->position_current.y = p->mass + EDGE_BOUNCE;
+    if (p->position_current.y > max_height - p->mass) {
+        p->position_current.y = max_height - p->mass;
+        p->position_old.y = p->position_current.y + dy;
+    } else if (p->position_current.y < p->mass) {
+        p->position_current.y = p->mass;
+        p->position_old.y = p->position_current.y + dy;
     }
 }
 
