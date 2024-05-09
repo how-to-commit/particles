@@ -88,8 +88,8 @@ void handle_collision(Particle *p1, Particle *p2) {
         double p1_mass_ratio = (double)p1->mass / (double)(p1->mass + p2->mass);
         double p2_mass_ratio = (double)p2->mass / (double)(p1->mass + p2->mass);
 
-        p1->position_current = p2f_add(p1->position_current, p2f_fmul(collision_direction, delta_pos * p1_mass_ratio));
-        p2->position_current = p2f_sub(p2->position_current, p2f_fmul(collision_direction, delta_pos * p2_mass_ratio));
+        p1->position_current = p2f_add(p1->position_current, p2f_fmul(collision_direction, delta_pos * p2_mass_ratio));
+        p2->position_current = p2f_sub(p2->position_current, p2f_fmul(collision_direction, delta_pos * p1_mass_ratio));
     }
 }
 
