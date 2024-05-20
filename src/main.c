@@ -25,6 +25,7 @@ EM_JS(int, get_css_screen_width, (), { return window.innerWidth; });
 EM_JS(int, get_css_screen_height, (), { return window.innerHeight; });
 
 void init() {
+    SetConfigFlags(FLAG_MSAA_4X_HINT);
     screenWidth = get_css_screen_width();
     screenHeight = get_css_screen_height();
 
